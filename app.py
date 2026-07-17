@@ -14,28 +14,6 @@ from datetime import datetime, timedelta
 import time
 import os
 
-
-import requests
-from bs4 import BeautifulSoup
-
-@st.cache_data(ttl=3600) # CRITICAL: Only run this once per hour
-def get_weather_network_temp():
-    try:
-        # User-Agent is required, or the site will reject the request
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        url = "https://www.theweathernetwork.com/en/city/in/chhattisgarh/korba/current"
-        response = requests.get(url, headers=headers, timeout=10)
-        
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            # This specific selector path is an educated guess based on your text
-            # Note: The Weather Network renders data via React/JS; this may return nothing
-            temp_element = soup.find('div', class_='temp') 
-            if temp_element:
-                return float(temp_element.text.replace('°', ''))
-    except Exception:
-        pass
-    return 30.0 # Fallback default
 st.set_page_config(page_title="NTPC Korba - AI Decision Support System", layout="wide")
 
 # ==============================================================================
@@ -179,7 +157,7 @@ class SCADAIngestionHub:
         
         new_row['Wind_Speed'] = np.clip(last_row['Wind_Speed'] + np.random.normal(0, 0.15), 0.4, 15)
         new_row['Wind_Direction'] = (last_row['Wind_Direction'] + np.random.normal(0, 4)) % 360
-        new_row['Temperature'] = get_weather_network_temp() # Or your API function
+        new_row['Temperature'] = np.clip(last_row['Temperature'] + np.random.normal(0, 0.1), 16, 47)
         new_row['Relative_Humidity'] = np.clip(last_row['Relative_Humidity'] + np.random.normal(0, 0.8), 12, 98)
         new_row['Rainfall'] = 0
         new_row['Hour'] = new_time.hour
@@ -593,9 +571,9 @@ def draw_dashboard(current_page, current_df, current_metrics, predictions, ai_an
             st.info("No recorded historical compliance events stored yet.")
         else:
             fl1, fl2, fl3 = st.columns(3)
-            with fl1: severity_filter = st.multiselect("Severity Tier", options=history_df['alarm_severity'].unique(), default=history_df['alarm_severity'].unique() if 'alarm_severity' in history_df.columns else [])
-            with fl2: status_filter = st.multiselect("Resolution Status", options=history_df['resolution_status'].unique(), default=history_df['resolution_status'].unique() if 'resolution_status' in history_df.columns else [])
-            with fl3: cause_filter = st.multiselect("Primary Flagged Cause", options=history_df['root_cause'].unique(), default=history_df['root_cause'].unique() if 'root_cause' in history_df.columns else [])
+            with fl1: severity_filter = st.st.multiselect("Severity Tier", options=history_df['alarm_severity'].unique(), default=history_df['alarm_severity'].unique() if 'alarm_severity' in history_df.columns else [])
+            with fl2: status_filter = st.st.multiselect("Resolution Status", options=history_df['resolution_status'].unique(), default=history_df['resolution_status'].unique() if 'resolution_status' in history_df.columns else [])
+            with fl3: cause_filter = st.st.multiselect("Primary Flagged Cause", options=history_df['root_cause'].unique(), default=history_df['root_cause'].unique() if 'root_cause' in history_df.columns else [])
             
             # Prevent failures if historical columns are blank
             filtered_df = history_df
