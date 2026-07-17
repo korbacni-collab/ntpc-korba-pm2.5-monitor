@@ -179,7 +179,7 @@ class SCADAIngestionHub:
         
         new_row['Wind_Speed'] = np.clip(last_row['Wind_Speed'] + np.random.normal(0, 0.15), 0.4, 15)
         new_row['Wind_Direction'] = (last_row['Wind_Direction'] + np.random.normal(0, 4)) % 360
-     new_row['Temperature'] = get_weather_network_temp() # Or your API function
+        new_row['Temperature'] = get_weather_network_temp() # Or your API function
         new_row['Relative_Humidity'] = np.clip(last_row['Relative_Humidity'] + np.random.normal(0, 0.8), 12, 98)
         new_row['Rainfall'] = 0
         new_row['Hour'] = new_time.hour
